@@ -11,15 +11,19 @@ def logistic10(x):
 
 
 class EloModel:
-    def __init__(self, teams, K=400.0):
+    def __init__(self, teams, K=400.0, learningRate=1.0):
+        # K parameter is a conversion between rank differences and scores
+        # to compute predicted scores from ranks AND to update ranks from a score
         self.K = K
+        # Optionally, you may not want the impact of a contest to
+        # have as direct an impact, so optionally a learning rate can tweak
+        # how agressively the rankings are updated from a contest
+        self.learningRate = learningRate
         self.teams = teams
 
-    def expectedScore(self, rankA, rankB):
-        return (logistic10((rankA - rankB) / self.K), logistic10((rankB - rankA) / self.K))
-
     def contest(self, teamA, scoreA, teamB, scoreB):
-
+        """ Report a contest between team A with scoreA and teamB with scoreB
+        """
         scaledScoreA = scoreA / (scoreA + scoreB)
         scaledScoreB = scoreB / (scoreA + scoreB)
 
@@ -31,8 +35,8 @@ class EloModel:
         expectedB = scaledExpectedB * (scoreA + scoreB)
         print("Predicted %s(%s) %s --  %s(%s) %s" % (teamA, rankA, expectedA, teamB, rankB, expectedB))
 
-        newRankA = rankA + self.K * (scaledScoreA - scaledExpectedA)
-        newRankB = rankB + self.K * (scaledScoreB - scaledExpectedB)
+        newRankA = rankA + self.learningRate * self.K * (scaledScoreA - scaledExpectedA)
+        newRankB = rankB + self.learningRate * self.K * (scaledScoreB - scaledExpectedB)
 
         self.teams[teamA] = newRankA
         self.teams[teamB] = newRankB
